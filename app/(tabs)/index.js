@@ -1,9 +1,9 @@
 // React Native equivalent of the provided HTML + JS
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Button } from 'react-native';
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { getDatabase, ref, onValue, set } from 'firebase/database';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -32,6 +32,15 @@ const App = () => {
     });
   }, []);
 
+  const togglePumpStatus = () => {
+    if (data.pump) {
+      const newStatus = data.pump.status === "ON" ? "OFF" : "ON";
+      const db = getDatabase();
+      const pumpRef = ref(db, '/pump');
+      set(pumpRef, { status: newStatus });
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Real-time Data</Text>
@@ -42,6 +51,11 @@ const App = () => {
       <View style={styles.card}>
         <Text style={styles.label}>Pump Status:</Text>
         <Text style={styles.value}>{data.pump?.status || 'Loading...'}</Text>
+        <Button
+          title={data.pump?.status === "ON" ? "Turn Off" : "Turn On"}
+          onPress={togglePumpStatus}
+          disabled={!data.pump}
+        />
       </View>
       <View style={styles.card}>
         <Text style={styles.label}>Ventilation Status:</Text>
