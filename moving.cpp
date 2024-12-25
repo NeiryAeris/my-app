@@ -39,8 +39,6 @@ const int AIR_QUALITY_THRESHOLD = 300; // Ngưỡng chất lượng không khí
 const int WATER_LEVEL_THRESHOLD = 20;  // Ngưỡng dưới bình chứa
 
 // // WiFi and MQTT settings
-const char *ssid = "BlueCandle";
-const char *password = "blazingeyes";
 const char *mqtt_server = "192.168.96.205";
 const int mqtt_port = 1883;
 const char *mqtt_user = "khiem";
@@ -76,14 +74,6 @@ void OpenServo()
         testServo.detach();
         doorStat = 1;
     }
-
-    // testServo.write(90);
-    // Serial.println("Servo at 90 degrees");
-    // delay(1000);
-
-    // testServo.write(180);
-    // Serial.println("Servo at 180 degrees");
-    // delay(1000);
 }
 
 void CloseServo()
@@ -97,14 +87,6 @@ void CloseServo()
         testServo.detach();
         doorStat = 0;
     }
-
-    // testServo.write(90);
-    // Serial.println("Servo at 90 degrees");
-    // delay(1000);
-
-    // testServo.write(180);
-    // Serial.println("Servo at 180 degrees");
-    // delay(1000);
 }
 void moveCurtainsOpen()
 {
@@ -215,7 +197,7 @@ void setup_wifi()
     delay(10);
     Serial.println();
     Serial.print("Connecting to ");
-    Serial.println(ssid);
+    Serial.println(WIFI_SSID);
 
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     while (WiFi.status() != WL_CONNECTED)
