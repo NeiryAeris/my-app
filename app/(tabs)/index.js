@@ -71,8 +71,8 @@ const App = () => {
         <View style={styles.gaugeBlock}>
           <Text style={styles.gaugeLabel}>Mức sáng (Lux)</Text>
           <CircularProgress
-            value={safeNumber(data.lightLevel)}
-            maxValue={100}
+            value={safeNumber(4095-data.ldrVal)}
+            maxValue={4095}
             radius={50}
             textColor="#000"
             activeStrokeColor="#FFC107"

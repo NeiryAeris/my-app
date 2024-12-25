@@ -103,10 +103,6 @@ void moveCurtainsOpen()
         analogWrite(ENA, 0);
     }
     isOpen = 1;
-    // Motor B
-    // digitalWrite(IN3, HIGH);
-    // digitalWrite(IN4, LOW);
-    // analogWrite(ENB, 128); // 50% speed
 }
 void moveCurtainsClose()
 {
@@ -122,9 +118,6 @@ void moveCurtainsClose()
         analogWrite(ENA, 0);
     }
     isOpen = 0;
-    // digitalWrite(IN3, LOW);
-    // digitalWrite(IN4, LOW);
-    // analogWrite(ENB, 0);
 }
 void detatching()
 {
