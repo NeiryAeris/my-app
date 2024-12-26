@@ -151,7 +151,7 @@ const App = () => {
         <View style={styles.gaugeBlock}>
           <Text style={[styles.gaugeLabel, { color: "#FF5722" }]}>Nhiệt độ (°C)</Text>
           <CircularProgress
-            value={safeNumber(data?.dhtVal?.Temp)}
+            value={parseFloat(safeNumber(data?.dhtVal?.Temp).toFixed(1))}
             maxValue={50}
             radius={50}
             textColor="#000"
