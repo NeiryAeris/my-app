@@ -19,6 +19,72 @@ const firebaseConfig = {
 
 const safeNumber = (value, defaultValue = 0) => (typeof value === 'number' ? value : defaultValue);
 
+const interpretAirQualityColor = (sensorValue) => {
+  if (sensorValue < 50) {
+    return "#00FF00"; // Bright Green (Excellent)
+  } else if (sensorValue < 100) {
+    return "#32CD32"; // Green (Good)
+  } else if (sensorValue < 150) {
+    return "#FFFF00"; // Yellow (Moderate)
+  } else if (sensorValue < 200) {
+    return "#FFA500"; // Orange (Poor)
+  } else {
+    return "#FF0000"; // Red (Dangerous)
+  }
+};
+
+const interpretAirQualityText = (sensorValue) => {
+  if (sensorValue < 50) {
+    return " - Xuất sắc";
+  } else if (sensorValue < 100) {
+    return " - Tốt";
+  } else if (sensorValue < 150) {
+    return " - Trung bình";
+  } else if (sensorValue < 200) {
+    return " - Kém";
+  } else {
+    return " - Nguy hiểm";
+  }
+};
+
+const interpretWaterLevelText = (waterLevel) => {
+  if (waterLevel < 20) {
+    return " - Rất thấp";
+  } else if (waterLevel < 50) {
+    return " - Thấp";
+  } else {
+    return " - Bình thường";
+  }
+};
+
+const interpretLightLevelColor = (lightValue) => {
+  if (lightValue < 40) {
+    return "#000000"; // Black (Dark)
+  } else if (lightValue < 800) {
+    return "#808080"; // Grey (Dim)
+  } else if (lightValue < 2000) {
+    return "#f2f25e"; // Light Yellow (Light)
+  } else if (lightValue < 3200) {
+    return "#FFFF00"; // Yellow (Bright)
+  } else {
+    return "#FFA500"; // Sunny Orange (Very Bright)
+  }
+};
+
+const interpretLightLevelText = (lightValue) => {
+  if (lightValue < 40) {
+    return " - Tối";
+  } else if (lightValue < 800) {
+    return " - Mờ";
+  } else if (lightValue < 2000) {
+    return " - Sáng";
+  } else if (lightValue < 3200) {
+    return " - Rất sáng";
+  } else {
+    return " - Quá sáng";
+  }
+};
+
 const App = () => {
   const [data, setData] = useState({});
 
@@ -47,18 +113,18 @@ const App = () => {
 
       <View style={styles.gaugeGrid}>
         <View style={styles.gaugeBlock}>
-          <Text style={styles.gaugeLabel}>Chất lượng không khí</Text>
+          <Text style={[styles.gaugeLabel, { color: interpretAirQualityColor(safeNumber(data.airQuality)) }]}>Chất lượng không khí{interpretAirQualityText(safeNumber(data.airQuality))}</Text>
           <CircularProgress
             value={safeNumber(data.airQuality)}
             maxValue={100}
             radius={50}
             textColor="#000"
-            activeStrokeColor="#4CAF50"
+            activeStrokeColor={interpretAirQualityColor(safeNumber(data.airQuality))}
             inActiveStrokeColor="#E0E0E0"
           />
         </View>
         <View style={styles.gaugeBlock}>
-          <Text style={styles.gaugeLabel}>Mực nước (%)</Text>
+          <Text style={[styles.gaugeLabel, { color: "#2196F3" }]}>Mực nước (%) {interpretWaterLevelText(safeNumber(data.waterLevel))}</Text>
           <CircularProgress
             value={(safeNumber(data.waterLevel) / 25) * 100}
             maxValue={100}
@@ -69,18 +135,21 @@ const App = () => {
           />
         </View>
         <View style={styles.gaugeBlock}>
-          <Text style={styles.gaugeLabel}>Mức sáng (Lux)</Text>
+          <Text style={[styles.gaugeLabel, { color: interpretLightLevelColor(safeNumber(data.lightLevel)) }]}>
+            Mức sáng (%){interpretLightLevelText(safeNumber(data.lightLevel))}
+          </Text>
           <CircularProgress
-            value={safeNumber(data.lightLevel)}
+            value={(Math.min(safeNumber(data.lightLevel), 3200)/3200)*100} // Cap at 3200
             maxValue={100}
             radius={50}
             textColor="#000"
-            activeStrokeColor="#FFC107"
+            activeStrokeColor={interpretLightLevelColor(safeNumber(data.lightLevel))}
             inActiveStrokeColor="#E0E0E0"
           />
         </View>
+
         <View style={styles.gaugeBlock}>
-          <Text style={styles.gaugeLabel}>Nhiệt độ (°C)</Text>
+          <Text style={[styles.gaugeLabel, { color: "#FF5722" }]}>Nhiệt độ (°C)</Text>
           <CircularProgress
             value={safeNumber(data?.dhtVal?.Temp)}
             maxValue={50}
@@ -91,7 +160,7 @@ const App = () => {
           />
         </View>
         <View style={styles.gaugeBlock}>
-          <Text style={styles.gaugeLabel}>Độ ẩm (%)</Text>
+          <Text style={[styles.gaugeLabel, { color: "#03A9F4" }]}>Độ ẩm (%)</Text>
           <CircularProgress
             value={safeNumber(data?.dhtVal?.Humid)}
             maxValue={100}
@@ -105,7 +174,7 @@ const App = () => {
 
       {Object.keys(data).map((device) => (
         data[device]?.manualControl !== undefined && data[device]?.status !== undefined && (
-          <View key={device} style={styles.card}>
+          <View key={device} style={styles.controlCard}>
             <Text style={styles.title}>{device.toUpperCase()}</Text>
             <View style={styles.row}>
               <Text style={styles.label}>Điều khiển tay:</Text>
@@ -114,15 +183,17 @@ const App = () => {
                 onValueChange={(value) => handleControlToggle(device, 'manualControl', value)}
               />
             </View>
-            {data[device].manualControl && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Trạng thái hoạt động:</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Trạng thái hoạt động:</Text>
+              {data[device].manualControl ? (
                 <Switch
                   value={data[device].status === 'ON'}
                   onValueChange={(value) => handleControlToggle(device, 'status', value ? 'ON' : 'OFF')}
                 />
-              </View>
-            )}
+              ) : (
+                <Text style={styles.status}>{data[device].status}</Text>
+              )}
+            </View>
           </View>
         )
       ))}
@@ -187,6 +258,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
+  },
+  status: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
   },
 });
 
