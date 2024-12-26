@@ -1,10 +1,11 @@
 // React Native equivalent of the provided HTML + JS
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, Picker } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch } from 'react-native';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, update } from 'firebase/database';
 import CircularProgress from 'react-native-circular-progress-indicator';
+import {Picker} from '@react-native-picker/picker';
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -140,13 +141,13 @@ const App = () => {
           />
         </View>
         <View style={styles.gaugeBlock}>
-          <Text style={[styles.gaugeLabel, { color: interpretLightLevelColor(safeNumber(data.lightLevel)) }]}>Mức sáng (%){interpretLightLevelText(safeNumber(data.lightLevel))}</Text>
+          <Text style={[styles.gaugeLabel, { color: interpretLightLevelColor(safeNumber(data.ldrVal)) }]}>Mức sáng (%){interpretLightLevelText(safeNumber(data.ldrVal))}</Text>
           <CircularProgress
-            value={safeNumber(data.lightLevel)/3200*100}
+            value={safeNumber(data.ldrVal)/3200*100}
             maxValue={100}
             radius={50}
             textColor="#000"
-            activeStrokeColor={interpretLightLevelColor(safeNumber(data.lightLevel))}
+            activeStrokeColor={interpretLightLevelColor(safeNumber(data.ldrVal))}
             inActiveStrokeColor="#E0E0E0"
           />
         </View>

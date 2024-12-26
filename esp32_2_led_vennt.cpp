@@ -1,7 +1,5 @@
 #include <WiFi.h>
 #include <FirebaseESP32.h>
-#include <ESP32Servo.h>
-#include <NewPing.h>
 #include <DHT.h>
 
 // WiFi Credentials
@@ -17,62 +15,24 @@
 #define DHTPIN 4
 #define LED_PIN 13
 #define FAN_PIN 12
-#define PUMP_PIN 14
-#define CONTACT_PIN 33
 #define LDR_PIN_ANALOG 34
 #define MQ135_PIN 35
-#define SERVO_DOOR_PIN 25
-#define TRIG_PIN 26
-#define ECHO_PIN 27
 
 #define IN2 22
 #define IN1 23
 #define ENA 21
 #define SPEED 50
 
-#define MAX_DISTANCE 20 // Maximum distance we want to ping for (in centimeters).
-
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
-Servo doorServo;
-NewPing sonar(TRIG_PIN, ECHO_PIN, 20); // Max distance 20 cm
+
 
 FirebaseConfig firebaseConfig;
 FirebaseAuth firebaseAuth;
 FirebaseData firebaseData;
 
 bool ledManualControl = false;
-bool pumpManualControl = false;
 bool fanManualControl = false;
-bool doorManualControl = false;
-
-int doorStat = 0; // 0: closed, 1: open prevent unwanted actions when the door is already in the desired state
-
-void OpenServo()
-{
-    if (doorStat == 0)
-    {
-        doorServo.attach(SERVO_DOOR_PIN);
-        doorServo.write(0);
-        Serial.println("Servo at 0 degrees");
-        delay(175);
-        doorServo.detach();
-        doorStat = 1;
-    }
-}
-
-void CloseServo()
-{
-    if (doorStat == 1)
-    {
-        doorServo.attach(SERVO_DOOR_PIN);
-        doorServo.write(180);
-        Serial.println("Servo at 180 degrees");
-        delay(175);
-        doorServo.detach();
-        doorStat = 0;
-    }
-}
 
 void LED_Control()
 {
@@ -143,65 +103,6 @@ void LED_Control()
     }
 }
 
-void Door_Control()
-{
-    if (Firebase.getJSON(firebaseData, "/door"))
-    {
-        if (firebaseData.dataType() == "json")
-        {
-            FirebaseJson &json = firebaseData.jsonObject();
-            FirebaseJsonData jsonData;
-
-            json.get(jsonData, "/manualControl");
-            if (jsonData.type == "boolean")
-            {
-                doorManualControl = jsonData.boolValue;
-            }
-
-            String doorStatus = "CLOSED";
-            json.get(jsonData, "/status");
-            if (jsonData.type == "string")
-            {
-                doorStatus = jsonData.stringValue;
-            }
-
-            if (doorManualControl)
-            {
-                if (doorStatus == "ON")
-                {
-                    OpenServo();
-                }
-                else
-                {
-                    CloseServo();
-                }
-
-                Serial.print("Manual Door Control - Status: ");
-                Serial.println(doorStatus);
-            }
-            else
-            {
-
-                int contactState = digitalRead(CONTACT_PIN);
-                if (contactState == HIGH)
-                {
-                    OpenServo();
-                    Serial.println("Automatic Door Control - Door opened due to contact sensor");
-                }
-                else
-                {
-                    CloseServo();
-                    Serial.println("Automatic Door Control - Door closed due to contact sensor");
-                }
-                delay(2000);
-            }
-        }
-    }
-    else
-    {
-        Serial.println("Failed to read door status from Firebase");
-    }
-}
 
 void setVentilationSpeed(String mode) {
     int speed = 0; // Default off
@@ -265,66 +166,6 @@ void Ventilation_Control() {
         }
     } else {
         Serial.println("Failed to read ventilation status from Firebase");
-    }
-}
-
-void Pump_Control()
-{
-    if (Firebase.getJSON(firebaseData, "/pump"))
-    {
-        if (firebaseData.dataType() == "json")
-        {
-            FirebaseJson &json = firebaseData.jsonObject();
-            FirebaseJsonData jsonData;
-
-            json.get(jsonData, "/manualControl");
-            if (jsonData.type == "boolean")
-            {
-                pumpManualControl = jsonData.boolValue;
-            }
-
-            String pumpStatus = "OFF";
-            json.get(jsonData, "/status");
-            if (jsonData.type == "string")
-            {
-                pumpStatus = jsonData.stringValue;
-            }
-
-            if (pumpManualControl)
-            {
-                if (pumpStatus == "ON")
-                {
-                    digitalWrite(PUMP_PIN, HIGH);
-                    Serial.println("Manual Pump Control - Turned ON");
-                }
-                else
-                {
-                    digitalWrite(PUMP_PIN, LOW);
-                    Serial.println("Manual Pump Control - Turned OFF");
-                }
-            }
-            else
-            {
-                int waterLevel = sonar.ping_cm();
-                Serial.print("Water level: ");
-                Serial.print(waterLevel);
-                Serial.println();
-                if (waterLevel > 3 && waterLevel < 20)
-                {
-                    digitalWrite(PUMP_PIN, HIGH);
-                    Serial.println("Automatic Pump Control - Turned ON due to low water level");
-                }
-                else
-                {
-                    digitalWrite(PUMP_PIN, LOW);
-                    Serial.println("Automatic Pump Control - Turned OFF due to sufficient water level");
-                }
-            }
-        }
-    }
-    else
-    {
-        Serial.println("Failed to read pump status from Firebase");
     }
 }
 
