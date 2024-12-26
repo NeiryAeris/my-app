@@ -1,7 +1,7 @@
 // React Native equivalent of the provided HTML + JS
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, Picker } from 'react-native';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, update } from 'firebase/database';
 import CircularProgress from 'react-native-circular-progress-indicator';
@@ -107,6 +107,11 @@ const App = () => {
     update(ref(db, path), { [field]: value });
   };
 
+  const handleVentilationStateChange = (value) => {
+    const db = getDatabase();
+    update(ref(db, '/ventilation'), { status: value });
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Điều khiển thiết bị</Text>
@@ -135,11 +140,9 @@ const App = () => {
           />
         </View>
         <View style={styles.gaugeBlock}>
-          <Text style={[styles.gaugeLabel, { color: interpretLightLevelColor(safeNumber(data.lightLevel)) }]}>
-            Mức sáng (%){interpretLightLevelText(safeNumber(data.lightLevel))}
-          </Text>
+          <Text style={[styles.gaugeLabel, { color: interpretLightLevelColor(safeNumber(data.lightLevel)) }]}>Mức sáng (%){interpretLightLevelText(safeNumber(data.lightLevel))}</Text>
           <CircularProgress
-            value={safeNumber(data.lightLevel)}
+            value={safeNumber(data.lightLevel)/3200*100}
             maxValue={100}
             radius={50}
             textColor="#000"
@@ -173,28 +176,57 @@ const App = () => {
       </View>
 
       {Object.keys(data).map((device) => (
-        data[device]?.manualControl !== undefined && data[device]?.status !== undefined && (
+        device === 'ventilation' ? (
           <View key={device} style={styles.controlCard}>
             <Text style={styles.title}>{device.toUpperCase()}</Text>
             <View style={styles.row}>
               <Text style={styles.label}>Điều khiển tay:</Text>
               <Switch
-                value={data[device].manualControl}
+                value={data[device]?.manualControl}
                 onValueChange={(value) => handleControlToggle(device, 'manualControl', value)}
               />
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Trạng thái hoạt động:</Text>
-              {data[device].manualControl ? (
-                <Switch
-                  value={data[device].status === 'ON'}
-                  onValueChange={(value) => handleControlToggle(device, 'status', value ? 'ON' : 'OFF')}
-                />
+              <Text style={styles.label}>Trạng thái thông gió:</Text>
+              {data[device]?.manualControl ? (
+                <Picker
+                  selectedValue={data[device]?.status}
+                  style={{ height: 50, width: 150 }}
+                  onValueChange={(value) => handleVentilationStateChange(value)}
+                >
+                  <Picker.Item label="OFF" value="OFF" />
+                  <Picker.Item label="ON" value="ON" />
+                  <Picker.Item label="ONHIGH" value="ONHIGH" />
+                </Picker>
               ) : (
-                <Text style={styles.status}>{data[device].status}</Text>
+                <Text style={styles.status}>{data[device]?.status}</Text>
               )}
             </View>
           </View>
+        ) : (
+          data[device]?.manualControl !== undefined && data[device]?.status !== undefined && (
+            <View key={device} style={styles.controlCard}>
+              <Text style={styles.title}>{device.toUpperCase()}</Text>
+              <View style={styles.row}>
+                <Text style={styles.label}>Điều khiển tay:</Text>
+                <Switch
+                  value={data[device].manualControl}
+                  onValueChange={(value) => handleControlToggle(device, 'manualControl', value)}
+                />
+              </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Trạng thái hoạt động:</Text>
+                {data[device].manualControl ? (
+                  <Switch
+                    value={data[device].status === 'ON'}
+                    onValueChange={(value) => handleControlToggle(device, 'status', value ? 'ON' : 'OFF')}
+                  />
+                ) : (
+                  <Text style={styles.status}>{data[device].status}</Text>
+                )}
+              </View>
+            </View>
+          )
         )
       ))}
     </ScrollView>
