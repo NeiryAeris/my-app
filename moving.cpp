@@ -254,6 +254,8 @@ void Ventilation_Control() {
                 Serial.println(fanMode);
             } else {
                 int airQuality = analogRead(MQ135_PIN);
+                Firebase.setInt(firebaseData, "/airQuality", airQuality);
+                Firebase.setFloat(firebaseData, "/airQualityPercentage", airQuality/4035*100);
                 if (airQuality > 200) {
                     setVentilationSpeed("ONHIGH");
                     Serial.println("Automatic Ventilation Control - High speed due to poor air quality");
@@ -309,6 +311,7 @@ void Pump_Control()
                 Serial.print("Water level: ");
                 Serial.print(waterLevel);
                 Serial.println();
+                Firebase.setInt(firebaseData, "/waterLevel", waterLevel);
                 if (waterLevel > 3 && waterLevel < 20)
                 {
                     digitalWrite(PUMP_PIN, HIGH);

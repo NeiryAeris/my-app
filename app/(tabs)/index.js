@@ -1,12 +1,13 @@
 // React Native equivalent of the provided HTML + JS
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch} from 'react-native';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, update } from 'firebase/database';
 import CircularProgress from 'react-native-circular-progress-indicator';
-import {Picker} from '@react-native-picker/picker';
-
+import { FontAwesome5 } from '@expo/vector-icons';
+import { Entypo } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 // Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyD1Xm7iTsxbGVTCm2-rRl7Y_F5ztj2ZfZ0",
@@ -120,9 +121,10 @@ const App = () => {
       <View style={styles.gaugeGrid}>
         <View style={styles.gaugeBlock}>
           <Text style={[styles.gaugeLabel, { color: interpretAirQualityColor(safeNumber(data.airQuality)) }]}>Chất lượng không khí{interpretAirQualityText(safeNumber(data.airQuality))}</Text>
+          <Entypo name="air" size={24} color={interpretAirQualityColor(safeNumber(data.airQuality))} style={styles.icon} />
           <CircularProgress
             value={safeNumber(data.airQuality)}
-            maxValue={100}
+            maxValue={500}
             radius={50}
             textColor="#000"
             activeStrokeColor={interpretAirQualityColor(safeNumber(data.airQuality))}
@@ -131,8 +133,9 @@ const App = () => {
         </View>
         <View style={styles.gaugeBlock}>
           <Text style={[styles.gaugeLabel, { color: "#2196F3" }]}>Mực nước (%) {interpretWaterLevelText(safeNumber(data.waterLevel))}</Text>
+          <FontAwesome5 name="water" size={24} color="#2196F3" style={styles.icon} />
           <CircularProgress
-            value={(safeNumber(data.waterLevel) / 25) * 100}
+            value={(safeNumber(data.waterLevel) / 20) * 100}
             maxValue={100}
             radius={50}
             textColor="#000"
@@ -142,8 +145,9 @@ const App = () => {
         </View>
         <View style={styles.gaugeBlock}>
           <Text style={[styles.gaugeLabel, { color: interpretLightLevelColor(safeNumber(data.ldrVal)) }]}>Mức sáng (%){interpretLightLevelText(safeNumber(data.ldrVal))}</Text>
+          <FontAwesome5 name="lightbulb" size={24} color={interpretLightLevelColor(safeNumber(data.ldrVal))} style={styles.icon} />
           <CircularProgress
-            value={safeNumber(data.ldrVal)/3200*100}
+            value={safeNumber(data.ldrVal)/4000*100}
             maxValue={100}
             radius={50}
             textColor="#000"
@@ -154,6 +158,7 @@ const App = () => {
 
         <View style={styles.gaugeBlock}>
           <Text style={[styles.gaugeLabel, { color: "#FF5722" }]}>Nhiệt độ (°C)</Text>
+          <FontAwesome5 name="temperature-high" size={24} color="#FF5722" style={styles.icon} />
           <CircularProgress
             value={parseFloat(safeNumber(data?.dhtVal?.Temp).toFixed(1))}
             maxValue={50}
@@ -165,6 +170,7 @@ const App = () => {
         </View>
         <View style={styles.gaugeBlock}>
           <Text style={[styles.gaugeLabel, { color: "#03A9F4" }]}>Độ ẩm (%)</Text>
+          <Entypo name="water" size={24} color="#03A9F4" style={styles.icon} />
           <CircularProgress
             value={safeNumber(data?.dhtVal?.Humid)}
             maxValue={100}
@@ -195,9 +201,9 @@ const App = () => {
                   style={{ height: 50, width: 150 }}
                   onValueChange={(value) => handleVentilationStateChange(value)}
                 >
-                  <Picker.Item label="OFF" value="OFF" />
-                  <Picker.Item label="ON" value="ON" />
-                  <Picker.Item label="ONHIGH" value="ONHIGH" />
+                  <Picker.Item label="Tắt" value="OFF" />
+                  <Picker.Item label="Bật" value="ON" />
+                  <Picker.Item label="Bật mạnh" value="ONHIGH" />
                 </Picker>
               ) : (
                 <Text style={styles.status}>{data[device]?.status}</Text>
@@ -296,6 +302,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000',
+  },
+  icon: {
+    marginBottom: 10,
   },
 });
 

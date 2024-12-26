@@ -14,7 +14,6 @@
 #define LED_WIFI 2
 #define DHTPIN 4
 #define LED_PIN 13
-#define FAN_PIN 12
 #define LDR_PIN_ANALOG 34
 #define MQ135_PIN 35
 
@@ -88,11 +87,13 @@ void LED_Control()
                 {
                     digitalWrite(LED_PIN, HIGH);
                     Serial.println("Automatic LED Control - Turned ON due to low light");
+                    Firebase.setString(firebaseData, "/LED/status", "ON");
                 }
                 else
                 {
                     digitalWrite(LED_PIN, LOW);
                     Serial.println("Automatic LED Control - Turned OFF due to sufficient light");
+                    Firebase.setString(firebaseData, "/LED/status", "OFF");
                 }
             }
         }
@@ -130,6 +131,7 @@ void setVentilationSpeed(String mode) {
         analogWrite(ENA, 0);
         Serial.println("Ventilation turned off");
     }
+    Firebase.setString(firebaseData, "/ventilation/status", mode);
 }
 
 void Ventilation_Control() {
@@ -154,7 +156,9 @@ void Ventilation_Control() {
                 Serial.print("Manual Ventilation Control - Mode: ");
                 Serial.println(fanMode);
             } else {
-                int airQuality = analogRead(MQ135_PIN);
+                int airQuality = analogRead(MQ135_PIN)*50/1023;
+                Firebase.setInt(firebaseData, "/airQuality", airQuality);
+                // Firebase.setFloat(firebaseData, "/airQualityPercentage", airQualit);
                 if (airQuality > 200) {
                     setVentilationSpeed("ONHIGH");
                     Serial.println("Automatic Ventilation Control - High speed due to poor air quality");
@@ -232,9 +236,7 @@ void setup()
     firebaseConfig.signer.tokens.legacy_token = FIREBASE_AUTH;
     Firebase.begin(&firebaseConfig, &firebaseAuth);
 
-    pinMode(CONTACT_PIN, INPUT);
     pinMode(LED_PIN, OUTPUT);
-    pinMode(PUMP_PIN, OUTPUT);
     pinMode(ENA, OUTPUT);
     pinMode(IN1, OUTPUT);
     pinMode(IN2, OUTPUT);
@@ -245,8 +247,6 @@ void loop()
 {
     LED_Control();
     DHT_Control();
-    Door_Control();
     Ventilation_Control();
-    Pump_Control();
     delay(1000);
 }

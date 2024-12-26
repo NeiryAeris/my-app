@@ -11,7 +11,7 @@
 #define FIREBASE_HOST "btl-iot-2edd3-default-rtdb.asia-southeast1.firebasedatabase.app"
 #define FIREBASE_AUTH "H8o2JMEHXyVhfUFtMu9oWXFkZJXT8Yu75uc1cnpm"
 
-
+#define LED_WIFI 2
 #define LED_PIN 13
 #define PUMP_PIN 14
 #define CONTACT_PIN 33
@@ -158,6 +158,7 @@ void Pump_Control()
             else
             {
                 int waterLevel = sonar.ping_cm();
+                Firebase.setInt(firebaseData, "/waterLevel", waterLevel);
                 Serial.print("Water level: ");
                 Serial.print(waterLevel);
                 Serial.println();
@@ -211,18 +212,11 @@ void setup()
     pinMode(CONTACT_PIN, INPUT);
     pinMode(LED_PIN, OUTPUT);
     pinMode(PUMP_PIN, OUTPUT);
-    pinMode(ENA, OUTPUT);
-    pinMode(IN1, OUTPUT);
-    pinMode(IN2, OUTPUT);
-    dht.begin();
 }
 
 void loop()
 {
-    LED_Control();
-    DHT_Control();
     Door_Control();
-    Ventilation_Control();
     Pump_Control();
     delay(1000);
 }
