@@ -13,25 +13,28 @@
 #define FIREBASE_AUTH "H8o2JMEHXyVhfUFtMu9oWXFkZJXT8Yu75uc1cnpm"
 
 // Sensor and Device Pins
-#define DHTPIN 27
-#define DHTTYPE DHT11
-#define LDR_PIN_ANALOG 34
+#define LED_WIFI 2
+#define LED_PIN 13
+#define PUMP_PIN 14
+#define FAN_PIN 12
+#define SERVO_DOOR_PIN 25
 #define TRIG_PIN 26
 #define ECHO_PIN 27
-#define SERVO_DOOR_PIN 25
-#define LED_PIN 13
-#define LED_WIFI 2
-#define FAN_PIN 12
-#define PUMP_PIN 14
+#define DHTPIN 27
+#define LDR_PIN_ANALOG 34
+#define MQ135_PIN 35
 
-#define ENA 21 // Motor A speed control
-#define IN1 23 // Motor A direction
 #define IN2 22
+#define IN1 23
+#define ENA 21
 #define SPEED 50
 
+#define MAX_DISTANCE 20 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+
+#define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 Servo doorServo;
-NewPing sonar(TRIG_PIN, ECHO_PIN, 400); // Max distance 400 cm
+NewPing sonar(TRIG_PIN, ECHO_PIN, 20); // Max distance 400 cm
 
 FirebaseConfig firebaseConfig;
 FirebaseAuth firebaseAuth;
@@ -139,164 +142,7 @@ void setup()
   // Initialize LED pin
   pinMode(LED_PIN, OUTPUT);
 }
-// void setup()
-// {
-//   Serial.begin(115200);
-
-//   // Initialize WiFi
-//   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-//   while (WiFi.status() != WL_CONNECTED)
-//   {
-//     Serial.print(".");
-//     delay(500);
-//   }
-//   Serial.println("WiFi Connected");
-
-//   // Firebase setup
-//   firebaseConfig.host = FIREBASE_HOST;
-//   firebaseConfig.signer.tokens.legacy_token = FIREBASE_AUTH;
-//   Firebase.begin(&firebaseConfig, &firebaseAuth);
-
-//   // Initialize sensors and actuators
-//   dht.begin();
-//   pinMode(LED_PIN, OUTPUT);
-//   pinMode(FAN_PIN, OUTPUT);
-//   pinMode(PUMP_PIN, OUTPUT);
-//   doorServo.attach(SERVO_DOOR_PIN);
-// }
-
-// void loop()
-// {
-//   // Read control data from Firebase
-//   if (Firebase.getJSON(firebaseData, "/"))
-//   {
-//     if (firebaseData.dataType() == "json")
-//     {
-//       FirebaseJson &json = firebaseData.jsonObject();
-//       FirebaseJsonData jsonData;
-
-//       // Handle LED control
-//       bool ledManual = false;
-//       String ledStatus = "OFF";
-//       json.get(jsonData, "/LED/manualControl");
-//       if (jsonData.type == "boolean")
-//       {
-//         ledManual = jsonData.boolValue;
-//       }
-//       json.get(jsonData, "/LED/status");
-//       if (jsonData.type == "string")
-//       {
-//         ledStatus = jsonData.stringValue;
-//       }
-//       if (!ledManual)
-//       {
-//         digitalWrite(LED_PIN, ledStatus == "ON" ? HIGH : LOW);
-//       }
-
-//       // Handle Door control
-//       bool doorManual = false;
-//       String doorStatus = "OFF";
-//       json.get(jsonData, "/door/manualControl");
-//       if (jsonData.type == "boolean")
-//       {
-//         doorManual = jsonData.boolValue;
-//       }
-//       json.get(jsonData, "/door/status");
-//       if (jsonData.type == "string")
-//       {
-//         doorStatus = jsonData.stringValue;
-//       }
-//       if (!doorManual)
-//       {
-//         if (doorStatus == "ON")
-//         {
-//           doorServo.write(0); // Open door
-//         }
-//         else
-//         {
-//           doorServo.write(180); // Close door
-//         }
-//       }
-
-//       // Handle Ventilation control
-//       bool fanManual = false;
-//       String fanStatus = "OFF";
-//       json.get(jsonData, "/ventilation/manualControl");
-//       if (jsonData.type == "boolean")
-//       {
-//         fanManual = jsonData.boolValue;
-//       }
-//       json.get(jsonData, "/ventilation/status");
-//       if (jsonData.type == "string")
-//       {
-//         fanStatus = jsonData.stringValue;
-//       }
-//       if (!fanManual)
-//       {
-//         digitalWrite(FAN_PIN, fanStatus == "ON" ? HIGH : LOW);
-//       }
-
-//       // Handle Pump control
-//       bool pumpManual = false;
-//       String pumpStatus = "OFF";
-//       json.get(jsonData, "/pump/manualControl");
-//       if (jsonData.type == "boolean")
-//       {
-//         pumpManual = jsonData.boolValue;
-//       }
-//       json.get(jsonData, "/pump/status");
-//       if (jsonData.type == "string")
-//       {
-//         pumpStatus = jsonData.stringValue;
-//       }
-//       if (!pumpManual)
-//       {
-//         digitalWrite(PUMP_PIN, pumpStatus == "ON" ? HIGH : LOW);
-//       }
-//     }
-//   }
-//   else
-//   {
-//     Serial.println("Failed to read Firebase data");
-//   }
-
-//   // Update sensor data to Firebase
-//   float temperature = dht.readTemperature();
-//   float humidity = dht.readHumidity();
-//   int waterLevel = sonar.ping_cm();
-
-//   if (!isnan(temperature) && !isnan(humidity))
-//   {
-//     if (!Firebase.setFloat(firebaseData, "/dhtVal/Temp", temperature))
-//     {
-//       Serial.println("Failed to send temperature data to Firebase");
-//     }
-//     if (!Firebase.setFloat(firebaseData, "/dhtVal/Humid", humidity))
-//     {
-//       Serial.println("Failed to send humidity data to Firebase");
-//     }
-//   }
-//   else
-//   {
-//     Serial.println("Failed to read DHT sensor data");
-//   }
-
-//   if (!Firebase.setInt(firebaseData, "/waterLevel", waterLevel))
-//   {
-//     Serial.println("Failed to send water level data to Firebase");
-//   }
-
-//   Serial.print("Temperature: ");
-//   Serial.println(temperature);
-//   Serial.print("Humidity: ");
-//   Serial.println(humidity);
-//   Serial.print("Water Level: ");
-//   Serial.println(waterLevel);
-
-//   delay(2000); // Update every 2 seconds
-// }
-
-void loop()
+void LED_Control()
 {
   if (Firebase.getJSON(firebaseData, "/LED"))
   {
@@ -331,6 +177,123 @@ void loop()
   {
     Serial.println("Failed to read LED status from Firebase");
   }
+}
+
+void DHT_Control()
+{
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+
+  if (!isnan(temperature) && !isnan(humidity))
+  {
+    // Send DHT data to Firebase
+    if (Firebase.setFloat(firebaseData, "/dhtVal/Temp", temperature))
+    {
+      Serial.print("Temperature sent to Firebase: ");
+      Serial.println(temperature);
+    }
+    else
+    {
+      Serial.println("Failed to send temperature to Firebase");
+    }
+
+    if (Firebase.setFloat(firebaseData, "/dhtVal/Humid", humidity))
+    {
+      Serial.print("Humidity sent to Firebase: ");
+      Serial.println(humidity);
+    }
+    else
+    {
+      Serial.println("Failed to send humidity to Firebase");
+    }
+  }
+  else
+  {
+    Serial.println("Failed to read DHT sensor data");
+  }
+}
+
+void Light_Control()
+{
+  int ldrValue = analogRead(LDR_PIN_ANALOG);
+  if (Firebase.setInt(firebaseData, "/ldrVal", ldrValue))
+  {
+    Serial.print("LDR value sent to Firebase: ");
+    Serial.println(ldrValue);
+  }
+  else
+  {
+    Serial.println("Failed to send LDR value to Firebase");
+  }
+}
+
+void AIR_Control()
+{
+  int airQuality = analogRead(MQ135_PIN);
+  if (Firebase.setInt(firebaseData, "/airQuality", airQuality))
+  {
+    Serial.print("Air quality sent to Firebase: ");
+    Serial.println(airQuality);
+  }
+  else
+  {
+    Serial.println("Failed to send air quality to Firebase");
+  }
+  float normalizedAirQuality = (airQuality / 4095.0) * 100.0;
+
+  Serial.print("Normalized Air Quality: ");
+  Serial.print(normalizedAirQuality);
+  Serial.println(" %");
+
+  // Send normalized value to Firebase
+  if (Firebase.setFloat(firebaseData, "/airQualityPercentage", normalizedAirQuality))
+  {
+    Serial.print("Normalized Air Quality sent to Firebase: ");
+    Serial.println(normalizedAirQuality);
+  }
+  else
+  {
+    Serial.println("Failed to send normalized air quality to Firebase");
+  }
+}
+
+void Water_Control()
+{
+  int measuredDistance = sonar.ping_cm(); // Distance in cm
+
+  if (measuredDistance == 0)
+  {
+    Serial.println("Out of range or no echo received");
+  }
+  else
+  {
+    int waterLevel = MAX_DISTANCE - measuredDistance; // Calculate water level
+    waterLevel = max(waterLevel, 0);                  // Ensure it doesn’t go below 0
+    Serial.print("Water Level: ");
+    Serial.print(waterLevel);
+    Serial.println(" cm");
+
+    // Example of sending data to Firebase
+    if (Firebase.setInt(firebaseData, "/waterLevel", waterLevel))
+    {
+      Serial.print("Water Level sent to Firebase: ");
+      Serial.println(waterLevel);
+    }
+    else
+    {
+      Serial.println("Failed to send water level to Firebase");
+    }
+  }
+}
+
+void loop()
+{
+
+  LED_Control();
+  DHT_Control();
+  Light_Control();
+  AIR_Control();
+  Water_Control();
 
   delay(2000); // Check status every 2 seconds
 }
